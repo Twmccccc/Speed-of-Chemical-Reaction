@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎈 Redoxon Science Lab Race!</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', sans-serif;
+            background-color: #fffae6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            margin: 0;
+        }
+
+        h1 {
+            color: #ff6f00;
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        p.subtitle {
+            color: #555;
+            font-size: 1.1rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .lab-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 0px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .lab-a { border: 4px solid #ffcc00; }
+        .lab-b { border: 4px solid #4dd0e1; }
+
+        .lab-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0;
+            text-align: center;
+            padding: 5px;
+            border-radius: 10px;
+        }
+        .lab-a .lab-title { background-color: #fff9db; color: #e67e22; }
+        .lab-b .lab-title { background-color: #e0f7fa; color: #00838f; }
+
+        .control-group {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px dashed #ddd;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2e7d32;
+            font-size: 0.95rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 3px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            background-color: #fff;
+        }
+
+        .simulation-space {
+            height: 340px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            padding-bottom: 15px;
+            overflow: visible;
+        }
+        .lab-a .simulation-space { background-color: #fffde7; border: 2px solid #fff59d; }
+        .lab-b .simulation-space { background-color: #e0f7fa; border: 2px solid #b2ebf2; }
+
+        .master-controls {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .master-controls { grid-column: auto; }
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            font-family: inherit;
+            border-radius: 15px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.1s ease;
+        }
+
+        .btn-start {
+            background-color: #ff9100;
+            color: white;
+            box-shadow: 0 5px 0 #cc7000;
+        }
+        .btn-start:hover { background-color: #ffa21f; }
+        .btn-start:active { transform: translateY(4px); box-shadow: 0 1px 0 #cc7000; }
+
+        .btn-reset {
+            background-color: #78909c;
+            color: white;
+            box-shadow: 0 5px 0 #455a64;
+        }
+        .btn-reset:hover { background-color: #90a4ae; }
+        .btn-reset:active { transform: translateY(4px); box-shadow: 0 1px 0 #455a64; }
+
+        button:disabled {
+            background-color: #cbd5e1 !important;
+            box-shadow: 0 5px 0 #94a3b8 !important;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* --- Apparatus Graphics --- */
+        .apparatus {
+            position: relative;
+            width: 100px;
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .bottle {
+            width: 80px;
+            height: 120px;
+            border: 4px solid #37474f;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            position: relative;
+            background: rgba(255,255,255,0.7);
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        .bottle-neck {
+            width: 30px;
+            height: 25px;
+            border: 4px solid #37474f;
+            border-bottom: none;
+            position: absolute;
+            bottom: 116px;
+            left: 25px;
+            background: white;
+            z-index: 2;
+            box-sizing: border-box;
+        }
+
+        .balloon {
+            width: 30px;
+            height: 40px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            position: absolute;
+            bottom: 137px;
+            transform-origin: bottom center;
+            transform: scale(1);
+            z-index: 3;
+            box-shadow: inset -4px -4px 0px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+
+        .lab-a .balloon { background-color: #ff1744; }
+        .lab-b .balloon { background-color: #ea00d9; }
+
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            border-bottom: 3px solid #37474f;
+            box-sizing: border-box;
+        }
+        .lab-a .balloon::after { background-color: #b71c1c; }
+        .lab-b .balloon::after { background-color: #aa009e; }
+
+        .water {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 55px;
+            background-color: rgba(41, 121, 255, 0.3);
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        .water.reacting {
+            background-color: rgba(255, 112, 67, 0.85) !important;
+        }
+
+        .bubbles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            bottom: 0;
+            display: none;
+        }
+
+        @keyframes fizz {
+            0% { transform: translateY(60px); opacity: 1; }
+            100% { transform: translateY(0px); opacity: 0; }
+        }
+
+        .bubble {
+            position: absolute;
+            background: #ffcc00;
+            border-radius: 50%;
+            animation: fizz 0.5s infinite ease-in;
+            opacity: 0.8;
+        }
+
+        .status-box {
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            border: 2px solid #ddd;
+            font-weight: bold;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #555;
+            width: 90%;
+            margin-top: 10px;
+            min-height: 95px;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎈 Redoxon Science Lab Race!</h1>
+    <p class="subtitle">Set up your test variables and see what happens! 🚀</p>
+
+    <div class="workspace">
+        
+        <div class="lab-card lab-a">
+            <div class="lab-title">🧪 Lab Setup A</div>
+            
+            <div class="control-group">
+                <label for="sizeA">✂️ Tablet Size:</label>
+                <select id="sizeA">
+                    <option value="0.4">Whole Tablet</option>
+                    <option value="2">Broken Pieces</option>
+                    <option value="9">Crushed Powder</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="tabletsA">🧪 Number of Tablets:</label>
+                <select id="tabletsA">
+                    <option value="0.5">0.5 Tablet</option>
+                    <option value="1" selected>1 Tablet</option>
+                    <option value="2">2 Tablets</option>
+                    <option value="3">3 Tablets</option>
+                    <option value="4">4 Tablets</option>
+                    <option value="5">5 Tablets</option>
+                    <option value="6">6 Tablets</option>
+                </select>
+            </div>
+
+            <div class="simulation-space">
+                <div class="apparatus">
+                    <div class="balloon" id="balloonA"></div>
+                    <div class="bottle-neck"></div>
+                    <div class="bottle">
+                        <div class="water" id="waterA">
+                            <div class="bubbles" id="bubblesA"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-box" id="statusA" style="text-align: center; justify-content: center;">Choose variables and click "Drop & Race!"</div>
+            </div>
+        </div>
+
+        <div class="lab-card lab-b">
+            <div class="lab-title">🧪 Lab Setup B</div>
+            
+            <div class="control-group">
+                <label for="sizeB">✂️ Tablet Size:</label>
+                <select id="sizeB">
+                    <option value="0.4">Whole Tablet</option>
+                    <option value="2">Broken Pieces</option>
+                    <option value="9" selected>Crushed Powder</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="tabletsB">🧪 Number of Tablets:</label>
+                <select id="tabletsB">
+                    <option value="0.5">0.5 Tablet</option>
+                    <option value="1" selected>1 Tablet</option>
+                    <option value="2">2 Tablets</option>
+                    <option value="3">3 Tablets</option>
+                    <option value="4">4 Tablets</option>
+                    <option value="5">5 Tablets</option>
+                    <option value="6">6 Tablets</option>
+                </select>
+            </div>
+
+            <div class="simulation-space">
+                <div class="apparatus">
+                    <div class="balloon" id="balloonB"></div>
+                    <div class="bottle-neck"></div>
+                    <div class="bottle">
+                        <div class="water" id="waterB">
+                            <div class="bubbles" id="bubblesB"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-box" id="statusB" style="text-align: center; justify-content: center;">Choose variables and click "Drop & Race!"</div>
+            </div>
+        </div>
+
+        <div class="master-controls">
+            <button id="startBtn" class="btn-start" onclick="startRace()">Drop & Race! ▶️</button>
+            <button id="resetBtn" class="btn-reset" onclick="resetRace()" disabled>Reset ↺</button>
+        </div>
+
+    </div>
+
+    <script>
+        let intervalA, intervalB;
+
+        function startRace() {
+            const startBtn = document.getElementById('startBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            startBtn.disabled = true;
+            resetBtn.disabled = true;
+
+            document.getElementById('statusA').style.textAlign = 'left';
+            document.getElementById('statusA').style.justifyContent = 'flex-start';
+            document.getElementById('statusB').style.textAlign = 'left';
+            document.getElementById('statusB').style.justifyContent = 'flex-start';
+
+            runIndividualLab({
+                id: 'A',
+                sizeMod: parseFloat(document.getElementById('sizeA').value),
+                tabCount: parseFloat(document.getElementById('tabletsA').value),
+                balloon: document.getElementById('balloonA'),
+                water: document.getElementById('waterA'),
+                bubbles: document.getElementById('bubblesA'),
+                status: document.getElementById('statusA'),
+                sizeText: document.getElementById('sizeA').options[document.getElementById('sizeA').selectedIndex].text
+            }, (intId) => intervalA = intId);
+
+            runIndividualLab({
+                id: 'B',
+                sizeMod: parseFloat(document.getElementById('sizeB').value),
+                tabCount: parseFloat(document.getElementById('tabletsB').value),
+                balloon: document.getElementById('balloonB'),
+                water: document.getElementById('waterB'),
+                bubbles: document.getElementById('bubblesB'),
+                status: document.getElementById('statusB'),
+                sizeText: document.getElementById('sizeB').options[document.getElementById('sizeB').selectedIndex].text
+            }, (intId) => intervalB = intId);
+        }
+
+        function runIndividualLab(lab, saveInterval) {
+            lab.water.classList.add('reacting');
+            lab.bubbles.style.display = 'block';
+            lab.bubbles.innerHTML = '';
+            
+            // Scaled bubble count to emphasize the reaction pace visually
+            const bubbleCount = lab.sizeMod === 9 ? 35 : lab.sizeMod === 2 ? 18 : 6;
+            for(let i=0; i < bubbleCount; i++) {
+                let b = document.createElement('div');
+                b.className = 'bubble';
+                b.style.width = Math.random()*6+3 + 'px';
+                b.style.height = b.style.width;
+                b.style.left = Math.random()*70 + 'px';
+                b.style.animationDelay = Math.random()*0.4 + 's';
+                b.style.animationDuration = (lab.sizeMod === 9 ? 0.2 : lab.sizeMod === 2 ? 0.4 : 0.7) + 's';
+                lab.bubbles.appendChild(b);
+            }
+
+            lab.status.innerHTML = "<span style='color:#ef6c00;'>🧡 Producing carbon dioxide gas... Watch the balloon!</span>";
+
+            let capReached = lab.tabCount >= 5;
+            let effectiveConcentration = capReached ? 5 : lab.tabCount;
+            
+            // Drastically amplified rate calculation to make size differences crystal clear
+            const rateOfReaction = effectiveConcentration * lab.sizeMod;
+            
+            let currentScale = 1;
+            const maxScale = 1.1 + (effectiveConcentration * 0.35);
+
+            let timer = setInterval(() => {
+                currentScale += (0.005 * rateOfReaction);
+                
+                if (currentScale >= maxScale) {
+                    currentScale = maxScale;
+                    clearInterval(timer);
+                    lab.bubbles.style.display = 'none';
+                    
+                    let explanation = `<div style="width:100%; color:#2e7d32;">`;
+                    explanation += `<b>✅ Done!</b><br>`;
+                    
+                    explanation += `• <b>Size:</b> ${lab.sizeText} has `;
+                    explanation += lab.sizeMod === 9 ? "<u>maximum</u> surface area, making it react the fastest.<br>" : 
+                                   lab.sizeMod === 2 ? "<u>medium</u> surface area, making it react moderately fast.<br>" : 
+                                   "<u>minimum</u> surface area, making it react the slowest.<br>";
+                    
+                    explanation += `• <b>Amount:</b> ${lab.tabCount} tablet(s) used. `;
+                    if(capReached) {
+                        explanation += `The water reached its maximum loading limit. Adding more than 5 tablets won't speed it up anymore!`;
+                    } else {
+                        explanation += `More tablets mean higher particle density, leading to faster chemical collisions!`;
+                    }
+                    explanation += `</div>`;
+                    
+                    lab.status.innerHTML = explanation;
+                    checkRaceEnd();
+                }
+                lab.balloon.style.transform = `scale(${currentScale})`;
+            }, 30);
+
+            saveInterval(timer);
+        }
+
+        function checkRaceEnd() {
+            if (document.getElementById('bubblesA').style.display === 'none' && 
+                document.getElementById('bubblesB').style.display === 'none') {
+                document.getElementById('resetBtn').disabled = false;
+            }
+        }
+
+        function resetRace() {
+            clearInterval(intervalA);
+            clearInterval(intervalB);
+
+            const statusA = document.getElementById('statusA');
+            statusA.style.textAlign = 'center';
+            statusA.style.justifyContent = 'center';
+            statusA.innerHTML = 'Choose variables and click "Drop & Race!"';
+            statusA.style.color = '#555';
+            document.getElementById('balloonA').style.transform = 'scale(1)';
+            document.getElementById('waterA').classList.remove('reacting');
+            document.getElementById('bubblesA').style.display = 'none';
+
+            const statusB = document.getElementById('statusB');
+            statusB.style.textAlign = 'center';
+            statusB.style.justifyContent = 'center';
+            statusB.innerHTML = 'Choose variables and click "Drop & Race!"';
+            statusB.style.color = '#555';
+            document.getElementById('balloonB').style.transform = 'scale(1)';
+            document.getElementById('waterB').classList.remove('reacting');
+            document.getElementById('bubblesB').style.display = 'none';
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = true;
+        }
+    </script>
+</body>
+</html>
